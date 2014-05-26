@@ -1,11 +1,11 @@
 <% if peek_enabled? %>
-<div id="peek" class="<%= Peek.env %><%= ' disabled' if cookies[:peek] == 'false' %>" data-request-id="<%= Peek.request_id %>">
-  <div class="wrapper">
-    <% Peek.views.each do |view| %>
-      <div id="<%= view.dom_id %>" class="view">
-        <%= render view.partial_path, :view => view %>
-      </div>
-    <% end %>
+  <div id="peek" class="peek <%= Peek.env %><%= ' is-disabled' if cookies[:peek] == 'false' %>" data-request-id="<%= Peek.request_id %>">
+    <div class="peek__wrapper">
+      <% Peek.views.each do |view| %>
+        <div id="<%= view.dom_id %>" class="peek__view">
+          <%= render view.partial_path, :view => view %>
+        </div>
+      <% end %>
+    </div>
   </div>
-</div>
 <% end %>

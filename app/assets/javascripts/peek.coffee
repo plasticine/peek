@@ -1,69 +1,73 @@
 #= require peek/vendor/jquery.tipsy
 
-requestId = null
+@Peek = class Peek
+  requestId: null
+  options:
+    resultsPath: '/peek/results'
 
-getRequestId = ->
-  if requestId? then requestId else $('#peek').data('request-id')
+  constructor: (options = {}) ->
+    @options = jQuery.extend(@options, options)
+    @$el = $('#peek')
+    @_bindEvents()
+    @update()
 
-peekEnabled = ->
-  $('#peek').length
+  getRequestId: ->
+    if requestId? then requestId else @$el.data('request-id')
 
-updatePerformanceBar = (results) ->
-  for key of results.data
-    for label of results.data[key]
-      $("[data-defer-to=#{key}-#{label}]").text results.data[key][label]
-  $(document).trigger 'peek:render', [getRequestId(), results]
+  updatePerformanceBar: (results) ->
+    for key of results.data
+      for label of results.data[key]
+        $("[data-defer-to=#{key}-#{label}]").text(results.data[key][label])
+    $(document).trigger('peek:render', [@getRequestId(), results])
 
-initializeTipsy = ->
-  $('#peek .peek-tooltip, #peek .tooltip').each ->
-    el = $(this)
-    gravity = if el.hasClass('rightwards') || el.hasClass('leftwards')
-      $.fn.tipsy.autoWE
-    else
-      $.fn.tipsy.autoNS
+  update: ->
+    if @_peekEnabled()
+      @_initializeTipsy()
+      @_fetchRequestResults()
 
-    el.tipsy
-      gravity: gravity
+  _peekEnabled: ->
+    @$el.length
 
-toggleBar = (event) ->
-  return if $(event.target).is ':input'
+  _initializeTipsy: ->
+    @$el.find('.peek-tooltip, .tooltip').each ->
+      el = $(this)
+      gravity = if el.hasClass('rightwards') || el.hasClass('leftwards')
+        $.fn.tipsy.autoWE
+      else
+        $.fn.tipsy.autoNS
 
-  if event.which == 96 && !event.metaKey
-    wrapper = $('#peek')
-    if wrapper.hasClass 'disabled'
-      wrapper.removeClass 'disabled'
-      document.cookie = "peek=true; path=/";
-    else
-      wrapper.addClass 'disabled'
-      document.cookie = "peek=false; path=/";
+      el.tipsy
+        gravity: gravity
 
-fetchRequestResults = ->
-  $.ajax '/peek/results',
-    data:
-      request_id: getRequestId()
-    success: (data, textStatus, xhr) ->
-      updatePerformanceBar data
-    error: (xhr, textStatus, error) ->
-      # Swallow the error
+  _toggleBar: (event) ->
+    return if $(event.target).is ':input'
 
-$(document).on 'keypress', toggleBar
+    if event.which == 96 && !event.metaKey
+      if @$el.hasClass 'disabled'
+        @$el.removeClass 'disabled'
+        document.cookie = "peek=true; path=/"
+      else
+        @$el.addClass 'disabled'
+        document.cookie = "peek=false; path=/"
 
-$(document).on 'peek:update', initializeTipsy
-$(document).on 'peek:update', fetchRequestResults
+  _fetchRequestResults: ->
+    $.ajax @options.resultsPath,
+      data:
+        request_id: @getRequestId()
+      success: (data, textStatus, xhr) =>
+        @updatePerformanceBar(data)
+      error: (xhr, textStatus, error) ->
+        # Swallow the error
 
-# Fire the event for our own listeners.
-$(document).on 'pjax:end', (event, xhr, options) ->
-  if xhr?
-    requestId = xhr.getResponseHeader 'X-Request-Id'
+  _onPjaxEnd: (event, xhr, options) =>
+    requestId = xhr.getResponseHeader 'X-Request-Id' if xhr?
+    @update()
 
-  if peekEnabled()
-    $(this).trigger 'peek:update'
+  _onPageChange: =>
+    @update()
 
-# Also listen to turbolinks page change event
-$(document).on 'page:change', ->
-  if peekEnabled()
-    $(this).trigger 'peek:update'
-
-$ ->
-  if peekEnabled()
-    $(this).trigger 'peek:update'
+  _bindEvents: ->
+    $(document)
+      .on('keypress',    @_toggleBar)
+      .on('pjax:end',    @_onPjaxEnd)
+      .on('page:change', @_onPageChange)

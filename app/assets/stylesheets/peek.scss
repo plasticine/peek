@@ -12,7 +12,7 @@
     visibility: visible;
   }
 
-  &.disabled {
+  &.is-disabled {
     display: none;
   }
 
@@ -28,7 +28,7 @@
     background: image-url('peek/bar/development.gif') repeat 0 0;
   }
 
-  .wrapper {
+  .peek__wrapper {
     width: 800px;
     margin: 0 auto;
   }
@@ -38,11 +38,12 @@
     background: #111;
     display: inline-block;
     padding: 4px 6px;
-    font-family: Consolas, "Liberation Mono", Courier, monospace;
+    font-family: "Fira Mono OT", Consolas, "Liberation Mono", Courier, monospace;
     line-height: 1;
     color: #ccc;
-    border-radius: 3px;
+    border-radius: 2px;
     box-shadow: 0 1px 0 rgba(255,255,255,.2), inset 0 1px 2px rgba(0,0,0,.25);
+    font-size: 12px;
 
     .hidden {
       display: none;
@@ -57,7 +58,7 @@
     color: #fff;
   }
 
-  .view {
+  .peek__view {
     margin-right: 15px;
     float: left;
 
